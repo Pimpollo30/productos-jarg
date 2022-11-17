@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:productos_app/providers/producto_form_provider.dart';
 
 import 'package:productos_app/widgets/producto_imagen.dart';
@@ -61,7 +62,19 @@ class _ProductoPageBody extends StatelessWidget {
                         size: 40,
                         color: Colors.white,
                         ),
-                        onPressed: () {},
+                        onPressed: () async {
+                          final picker = new ImagePicker();
+                          final PickedFile? pickedFile = await picker.getImage(
+                            source: ImageSource.camera,
+                            imageQuality: 100,
+                          );
+                          if (pickedFile == null) {
+                            print("No se seleccionó nada");
+                            return;
+                          }
+                          print('Imagen: ${pickedFile.path}');
+                          productoService.updateImagen(pickedFile.path);
+                        },
                     ),
                   ),
                 ],
@@ -76,6 +89,10 @@ class _ProductoPageBody extends StatelessWidget {
         child: Icon(Icons.save_outlined),
         onPressed: () async {
           if (!productoFormProvider.isValidForm()) return;
+          final String? imagenUrl = await productoService.uploadImage();
+          if (imagenUrl != null) {
+            productoFormProvider.producto.imagen = imagenUrl;
+          }
           await productoService.saveOrCreateProducto(productoFormProvider.producto);
           Navigator.pop(context);
         }
